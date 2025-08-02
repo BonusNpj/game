@@ -1,46 +1,278 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>🐍 Snake by Bonus</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
-  <script src="game.js"></script>
-  <style>
-    body { margin: 0; background: #222; text-align: center; }
-    canvas { margin-top: 20px; }
-    #controls {
-      position: fixed;
-      bottom: 50px; left: 50%;
-      transform: translateX(-50%);
-      display: flex; flex-direction: column;
-      align-items: center; gap: 15px;
-    }
-    #controls button {
-      font-size: 30px;
-      padding: 15px 25px;
-      border-radius: 12px;
-      border: none;
-      background: rgba(68, 68, 68, 0.7); /* โปร่งใส 30% */
-      color: white;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    #controls div { display: flex; gap: 20px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>เกมงู + Leaderboard Firebase</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:#222;
+    color:#eee;
+    user-select: none;
+  }
+  #gameCanvas {
+    background: #333;
+    display: block;
+    margin: 20px auto;
+    border: 2px solid #555;
+  }
+  #leaderboard {
+    margin-top: 20px;
+  }
+  #controlPanel {
+    margin: 20px auto;
+    text-align: center;
+    display:none;
+  }
+  button.control-btn {
+    margin: 5px;
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #555;
+    color: white;
+  }
+  button.control-btn:active {
+    background-color: #999;
+  }
+  button#startBtn, button#resetBtn, button#showLeaderboardBtn {
+    margin: 10px;
+    padding: 10px 25px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    cursor:pointer;
+    color: white;
+  }
+  #startBtn { background-color: #28a745; }
+  #resetBtn { background-color: #007bff; display:none; }
+  #showLeaderboardBtn { background-color: #6f42c1; display:none; }
+  input#playerNameInput {
+    font-size: 16px;
+    padding: 7px 10px;
+    width: 220px;
+    border-radius: 5px;
+    border: none;
+    margin-bottom: 10px;
+  }
+</style>
 </head>
 <body>
-  <h1 style="color:white">🐍 Snake by Bonus</h1>
-  
-  <div id="controls">
-    <div><button onclick="nextDir='UP'">⬆️</button></div>
-    <div>
-      <button onclick="nextDir='LEFT'">⬅️</button>
-      <button onclick="nextDir='DOWN'">⬇️</button>
-      <button onclick="nextDir='RIGHT'">➡️</button>
-    </div>
-    <div>
-      <button onclick="restart()">🔄 เล่นใหม่</button>
-    </div>
+
+<h1>🐍 เกมงู + Leaderboard Firebase</h1>
+
+<div id="loginScreen">
+  <p>กรุณาใส่ชื่อของคุณก่อนเริ่มเกม:</p>
+  <input id="playerNameInput" placeholder="ชื่อของคุณ" autocomplete="off" />
+  <br />
+  <button id="startBtn">เริ่มเกม</button>
+</div>
+
+<canvas id="gameCanvas" width="600" height="400" style="display:none;"></canvas>
+
+<div id="controlPanel">
+  <div>
+    <button class="control-btn" id="btnUp">⬆</button>
   </div>
+  <div>
+    <button class="control-btn" id="btnLeft">⬅</button>
+    <button class="control-btn" id="btnDown">⬇</button>
+    <button class="control-btn" id="btnRight">➡</button>
+  </div>
+</div>
+
+<div>
+  <button id="resetBtn">เริ่มใหม่</button>
+  <button id="showLeaderboardBtn">ดูลีดเดอร์บอร์ด</button>
+</div>
+
+<div id="leaderboard"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import { getDatabase, ref, get, set, query, orderByValue, limitToLast } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDhHTNiPtG08-MeC2v6eb9tw3_I29ulRm8",
+    authDomain: "game-7af18.firebaseapp.com",
+    projectId: "game-7af18",
+    storageBucket: "game-7af18.firebasestorage.app",
+    messagingSenderId: "29730435014",
+    appId: "1:29730435014:web:53f95c6de47fdd75a74cc7",
+    measurementId: "G-5B684L5D3L"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  async function saveScore(playerName, score) {
+    const scoreRef = ref(db, 'scores/' + playerName);
+    const snapshot = await get(scoreRef);
+    if (!snapshot.exists() || score > snapshot.val()) {
+      await set(scoreRef, score);
+      alert(`บันทึกคะแนนใหม่: ${score} สำหรับผู้เล่น ${playerName}`);
+    }
+  }
+
+  async function loadLeaderboard() {
+    const scoresRef = ref(db, 'scores');
+    const topScoresQuery = query(scoresRef, orderByValue(), limitToLast(10));
+    const snapshot = await get(topScoresQuery);
+    const scores = [];
+    snapshot.forEach(child => {
+      scores.push({ name: child.key, score: child.val() });
+    });
+    scores.reverse();
+    return scores;
+  }
+
+  let box = 15;
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  let snake = [];
+  const initialLength = 5;
+  let direction = 'RIGHT';
+  let food = {};
+  let score = 0;
+  let gameInterval;
+  let playerName = '';
+
+  function spawnFood() {
+    food = {
+      x: Math.floor(Math.random() * (canvas.width/box)) * box,
+      y: Math.floor(Math.random() * (canvas.height/box)) * box
+    };
+  }
+
+  function draw() {
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for(let i=0; i<snake.length; i++) {
+      ctx.fillStyle = (i === 0) ? '#00FF00' : '#0f0';
+      ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      ctx.strokeStyle = '#003300';
+      ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+    }
+
+    ctx.fillStyle = '#FFFF00';
+    ctx.fillRect(food.x, food.y, box, box);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px Arial';
+    ctx.fillText('คะแนน: ' + score, 10, 30);
+  }
+
+  function collision(newHead, array) {
+    for(let i=0; i<array.length; i++) {
+      if(newHead.x === array[i].x && newHead.y === array[i].y) return true;
+    }
+    return false;
+  }
+
+  function gameOver() {
+    clearInterval(gameInterval);
+    alert(`เกมจบ คะแนนของคุณคือ ${score}`);
+    saveScore(playerName, score);
+    document.getElementById('showLeaderboardBtn').style.display = 'inline-block';
+    document.getElementById('resetBtn').style.display = 'inline-block';
+  }
+
+  function update() {
+    let head = {...snake[0]};
+    if(direction === 'LEFT') head.x -= box;
+    if(direction === 'RIGHT') head.x += box;
+    if(direction === 'UP') head.y -= box;
+    if(direction === 'DOWN') head.y += box;
+
+    if(head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || collision(head, snake)) {
+      gameOver();
+      return;
+    }
+
+    snake.unshift(head);
+
+    if(head.x === food.x && head.y === food.y) {
+      score += 1;
+      spawnFood();
+    } else {
+      snake.pop();
+    }
+
+    draw();
+  }
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+    else if(e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+    else if(e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+    else if(e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+  });
+
+  // ปุ่มมือถือ
+  document.getElementById('btnUp').addEventListener('click', () => { if(direction !== 'DOWN') direction = 'UP'; });
+  document.getElementById('btnDown').addEventListener('click', () => { if(direction !== 'UP') direction = 'DOWN'; });
+  document.getElementById('btnLeft').addEventListener('click', () => { if(direction !== 'RIGHT') direction = 'LEFT'; });
+  document.getElementById('btnRight').addEventListener('click', () => { if(direction !== 'LEFT') direction = 'RIGHT'; });
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    const inputName = document.getElementById('playerNameInput').value.trim();
+    if(inputName === '') { alert('กรุณาใส่ชื่อของคุณก่อนเริ่มเกม'); return; }
+    playerName = inputName;
+    document.getElementById('loginScreen').style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('controlPanel').style.display = 'block';
+    document.getElementById('resetBtn').style.display = 'inline-block';
+
+    snake = [];
+    for(let i=initialLength - 1; i>=0; i--) {
+      snake.push({x: i * box, y: 10 * box});
+    }
+    direction = 'RIGHT';
+    score = 0;
+    spawnFood();
+    draw();
+    clearInterval(gameInterval);
+    gameInterval = setInterval(update, 150);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    clearInterval(gameInterval);
+    snake = [];
+    for(let i=initialLength - 1; i>=0; i--) {
+      snake.push({x: i * box, y: 10 * box});
+    }
+    direction = 'RIGHT';
+    score = 0;
+    spawnFood();
+    draw();
+    gameInterval = setInterval(update, 150);
+    document.getElementById('leaderboard').innerHTML = '';
+    document.getElementById('showLeaderboardBtn').style.display = 'none';
+  });
+
+  document.getElementById('showLeaderboardBtn').addEventListener('click', async () => {
+    const leaderboardDiv = document.getElementById('leaderboard');
+    leaderboardDiv.innerHTML = '<h2>ลีดเดอร์บอร์ด 10 อันดับ</h2>';
+    const scores = await loadLeaderboard();
+    if(scores.length === 0) {
+      leaderboardDiv.innerHTML += '<p>ยังไม่มีคะแนนใด ๆ</p>';
+      return;
+    }
+    const list = document.createElement('ol');
+    scores.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = `${item.name} : ${item.score}`;
+      list.appendChild(li);
+    });
+    leaderboardDiv.appendChild(list);
+  });
+</script>
+
 </body>
 </html>
-
