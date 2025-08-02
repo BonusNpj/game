@@ -3,69 +3,62 @@ var config = {
     width: 600,
     height: 400,
     backgroundColor: '#2d2d2d',
-    scene: { create: create }
+    scene: { create: create, update: update }
 };
 
 var game = new Phaser.Game(config);
-var snakeBody = [];
+
+var snake = [{x: 300, y: 200}];
 var snakeLength = 3;
-var food;
-var score = 0;
-var scoreText;
 var dir = "RIGHT";
 var nextDir = "RIGHT";
+var food = {x: 100, y: 100};
+var graphics;
+var score = 0;
+var scoreText;
 var playArea = { x: 0, y: 0, width: 600, height: 400 };
+var moveTimer = 0;
 
 function create() {
-    // หัวงู
-    let head = this.add.rectangle(300, 200, 10, 10, 0x00ff00);
-    snakeBody.push(head);
-
-    // สร้างอาหาร
-    spawnFood(this);
-
-    // คะแนน
+    graphics = this.add.graphics();
     scoreText = this.add.text(10, 10, "คะแนน: 0", { fontSize: '20px', fill: '#fff' });
-
-    // คีย์บอร์ด
     cursors = this.input.keyboard.createCursorKeys();
-
-    // ให้ moveSnake ทำงานทุก 200ms
-    this.time.addEvent({
-        delay: 200,
-        loop: true,
-        callback: () => moveSnake(this)
-    });
 }
 
-function moveSnake(scene) {
+function update(time) {
     // ควบคุมจากคีย์บอร์ด
     if (cursors.left.isDown && dir !== "RIGHT") nextDir = "LEFT";
     else if (cursors.right.isDown && dir !== "LEFT") nextDir = "RIGHT";
     else if (cursors.up.isDown && dir !== "DOWN") nextDir = "UP";
     else if (cursors.down.isDown && dir !== "UP") nextDir = "DOWN";
 
+    // เคลื่อนที่ทุก 200ms
+    if (time > moveTimer) {
+        moveSnake();
+        moveTimer = time + 200;
+    }
+
+    draw();
+}
+
+function moveSnake() {
     dir = nextDir;
+    var head = { x: snake[0].x, y: snake[0].y };
 
-    var head = snakeBody[0];
-    var newHead = scene.add.rectangle(head.x, head.y, 10, 10, 0x00ff00);
+    if (dir === "LEFT") head.x -= 10;
+    if (dir === "RIGHT") head.x += 10;
+    if (dir === "UP") head.y -= 10;
+    if (dir === "DOWN") head.y += 10;
 
-    if (dir === "LEFT") newHead.x -= 10;
-    else if (dir === "RIGHT") newHead.x += 10;
-    else if (dir === "UP") newHead.y -= 10;
-    else if (dir === "DOWN") newHead.y += 10;
-
-    snakeBody.unshift(newHead);
+    snake.unshift(head);
 
     // กินอาหาร
-    if (Phaser.Geom.Intersects.RectangleToRectangle(newHead.getBounds(), food.getBounds())) {
-        score += 1;
+    if (head.x === food.x && head.y === food.y) {
+        score++;
         scoreText.setText("คะแนน: " + score);
-        food.destroy();
-        spawnFood(scene);
+        spawnFood();
         snakeLength++;
 
-        // ลดขนาดสนาม (ถ้ายังไม่เล็กเกินไป)
         if (playArea.width > 200 && playArea.height > 200) {
             playArea.x += 5;
             playArea.y += 5;
@@ -74,42 +67,54 @@ function moveSnake(scene) {
         }
     }
 
-    // ถ้าเกินความยาว ลบหาง
-    if (snakeBody.length > snakeLength) {
-        var tail = snakeBody.pop();
-        tail.destroy();
+    // ตัดหางถ้าเกิน
+    while (snake.length > snakeLength) {
+        snake.pop();
     }
 
     // ชนตัวเอง
-    for (let i = 1; i < snakeBody.length; i++) {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(newHead.getBounds(), snakeBody[i].getBounds())) {
-            restart(scene);
-            return;
-        }
+    for (let i = 1; i < snake.length; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) restart();
     }
 
-    // ออกนอกสนาม
-    if (newHead.x < playArea.x || 
-        newHead.x >= playArea.x + playArea.width || 
-        newHead.y < playArea.y || 
-        newHead.y >= playArea.y + playArea.height) {
-        restart(scene);
+    // ออกนอกขอบ
+    if (head.x < playArea.x || head.x >= playArea.x + playArea.width ||
+        head.y < playArea.y || head.y >= playArea.y + playArea.height) {
+        restart();
     }
 }
 
-function spawnFood(scene) {
-    var x = Phaser.Math.Between(playArea.x / 10, (playArea.x + playArea.width) / 10 - 1) * 10;
-    var y = Phaser.Math.Between(playArea.y / 10, (playArea.y + playArea.height) / 10 - 1) * 10;
-    food = scene.add.rectangle(x, y, 10, 10, 0xff0000);
-    // ❌ ไม่มี physics → อาหารจะหยุดนิ่ง
+function draw() {
+    graphics.clear();
+
+    // วาดกรอบสนาม
+    graphics.lineStyle(2, 0xff0000);
+    graphics.strokeRect(playArea.x, playArea.y, playArea.width, playArea.height);
+
+    // วาดงู
+    graphics.fillStyle(0x00ff00);
+    snake.forEach(part => {
+        graphics.fillRect(part.x, part.y, 10, 10);
+    });
+
+    // วาดอาหาร
+    graphics.fillStyle(0xff0000);
+    graphics.fillRect(food.x, food.y, 10, 10);
 }
 
-function restart(scene) {
-    scene.scene.restart();
-    snakeBody = [];
+function spawnFood() {
+    var cols = playArea.width / 10;
+    var rows = playArea.height / 10;
+    food.x = playArea.x + Math.floor(Math.random() * cols) * 10;
+    food.y = playArea.y + Math.floor(Math.random() * rows) * 10;
+}
+
+function restart() {
+    snake = [{x: 300, y: 200}];
     snakeLength = 3;
-    score = 0;
     dir = "RIGHT";
     nextDir = "RIGHT";
+    score = 0;
     playArea = { x: 0, y: 0, width: 600, height: 400 };
+    spawnFood();
 }
