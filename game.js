@@ -29,7 +29,6 @@ function create() {
 }
 
 function update(time) {
-    // ควบคุมจากคีย์บอร์ด
     if (cursors.left.isDown && lastDir !== "RIGHT") nextDir = "LEFT";
     else if (cursors.right.isDown && lastDir !== "LEFT") nextDir = "RIGHT";
     else if (cursors.up.isDown && lastDir !== "DOWN") nextDir = "UP";
@@ -43,7 +42,7 @@ function update(time) {
 }
 
 function moveSnake() {
-    // ห้ามกลับหลัง 180 องศาทันที
+    // ห้ามกลับหลังทันที
     if ((dir === "LEFT" && nextDir === "RIGHT") ||
         (dir === "RIGHT" && nextDir === "LEFT") ||
         (dir === "UP" && nextDir === "DOWN") ||
@@ -55,7 +54,6 @@ function moveSnake() {
     lastDir = dir;
 
     var head = { x: snake[0].x, y: snake[0].y };
-
     if (dir === "LEFT") head.x -= 10;
     if (dir === "RIGHT") head.x += 10;
     if (dir === "UP") head.y -= 10;
@@ -70,7 +68,6 @@ function moveSnake() {
         spawnFood();
         snakeLength++;
 
-        // สนามเล็กลง
         if (playArea.width > 200 && playArea.height > 200) {
             playArea.x += 5;
             playArea.y += 5;
@@ -79,9 +76,7 @@ function moveSnake() {
         }
     }
 
-    while (snake.length > snakeLength) {
-        snake.pop();
-    }
+    while (snake.length > snakeLength) snake.pop();
 
     // ชนตัวเอง
     for (let i = 1; i < snake.length; i++) {
@@ -97,17 +92,12 @@ function moveSnake() {
 
 function draw() {
     graphics.clear();
-    // กรอบสนาม
     graphics.lineStyle(2, 0xff0000);
     graphics.strokeRect(playArea.x, playArea.y, playArea.width, playArea.height);
 
-    // วาดงู
     graphics.fillStyle(0x00ff00);
-    snake.forEach(part => {
-        graphics.fillRect(part.x, part.y, 10, 10);
-    });
+    snake.forEach(part => graphics.fillRect(part.x, part.y, 10, 10));
 
-    // วาดอาหาร
     graphics.fillStyle(0xff0000);
     graphics.fillRect(food.x, food.y, 10, 10);
 }

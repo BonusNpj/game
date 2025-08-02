@@ -8,20 +8,37 @@
   <style>
     body { margin: 0; background: #222; text-align: center; }
     canvas { margin-top: 20px; }
-    #controls button {
-      font-size: 30px; margin: 5px; padding: 15px;
-      border-radius: 10px; border: none; background: #555; color: white;
+    #controls {
+      position: fixed;
+      bottom: 50px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column;
+      align-items: center; gap: 15px;
     }
+    #controls button {
+      font-size: 30px;
+      padding: 15px 25px;
+      border-radius: 12px;
+      border: none;
+      background: #444;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    #controls div { display: flex; gap: 20px; }
   </style>
 </head>
 <body>
   <h1 style="color:white">🐍 Snake by Bonus</h1>
-  <div id="controls" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);">
+  
+  <div id="controls">
     <div><button onclick="nextDir='UP'">⬆️</button></div>
     <div>
       <button onclick="nextDir='LEFT'">⬅️</button>
       <button onclick="nextDir='DOWN'">⬇️</button>
       <button onclick="nextDir='RIGHT'">➡️</button>
+    </div>
+    <div>
+      <button onclick="restart()">🔄 เล่นใหม่</button>
     </div>
   </div>
 </body>
