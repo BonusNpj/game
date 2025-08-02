@@ -13,12 +13,15 @@ var snakeLength = 3;
 var dir = "RIGHT";
 var nextDir = "RIGHT";
 var lastDir = "RIGHT";
-var food = {x: 100, y: 100};
+var food = {x: 100, y: 100, size: 20}; // อาหารใหญ่ขึ้น
 var graphics;
 var score = 0;
 var scoreText;
 var playArea = { x: 0, y: 0, width: 600, height: 400 };
 var moveTimer = 0;
+var speed = 180;       // เริ่มเร็วขึ้น
+var speedDecrease = 5; // เร็วขึ้นทีละ 5ms เมื่อกินอาหาร
+var minSpeed = 80;     // เร็วสุดไม่ต่ำกว่า 80ms
 var cursors;
 
 function create() {
@@ -36,13 +39,12 @@ function update(time) {
 
     if (time > moveTimer) {
         moveSnake();
-        moveTimer = time + 200; // งูเคลื่อนทุก 200ms
+        moveTimer = time + speed;
     }
     draw();
 }
 
 function moveSnake() {
-    // ห้ามกลับหลังทันที
     if ((dir === "LEFT" && nextDir === "RIGHT") ||
         (dir === "RIGHT" && nextDir === "LEFT") ||
         (dir === "UP" && nextDir === "DOWN") ||
@@ -61,13 +63,21 @@ function moveSnake() {
 
     snake.unshift(head);
 
-    // กินอาหาร
-    if (head.x === food.x && head.y === food.y) {
+    // ตรวจการกินอาหาร
+    if (head.x < food.x + food.size &&
+        head.x + 10 > food.x &&
+        head.y < food.y + food.size &&
+        head.y + 10 > food.y) {
+        
         score++;
         scoreText.setText("คะแนน: " + score);
         spawnFood();
         snakeLength++;
 
+        // เร่งความเร็วทีละ 5ms
+        if (speed > minSpeed) speed -= speedDecrease;
+
+        // ลดขนาดพื้นที่เล่น
         if (playArea.width > 200 && playArea.height > 200) {
             playArea.x += 5;
             playArea.y += 5;
@@ -99,12 +109,13 @@ function draw() {
     snake.forEach(part => graphics.fillRect(part.x, part.y, 10, 10));
 
     graphics.fillStyle(0xff0000);
-    graphics.fillRect(food.x, food.y, 10, 10);
+    graphics.fillRect(food.x, food.y, food.size, food.size);
 }
 
 function spawnFood() {
-    var cols = playArea.width / 10;
-    var rows = playArea.height / 10;
+    var cols = Math.floor((playArea.width - food.size) / 10);
+    var rows = Math.floor((playArea.height - food.size) / 10);
+
     food.x = playArea.x + Math.floor(Math.random() * cols) * 10;
     food.y = playArea.y + Math.floor(Math.random() * rows) * 10;
 }
@@ -116,6 +127,7 @@ function restart() {
     nextDir = "RIGHT";
     lastDir = "RIGHT";
     score = 0;
+    speed = 180; // รีเซ็ตความเร็ว
     playArea = { x: 0, y: 0, width: 600, height: 400 };
     spawnFood();
 }
