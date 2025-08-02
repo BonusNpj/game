@@ -3,32 +3,34 @@ var config = {
     width: 600,
     height: 400,
     backgroundColor: '#2d2d2d',
-    scene: { preload: preload, create: create }
+    scene: { create: create }
 };
 
 var game = new Phaser.Game(config);
 var snakeBody = [];
 var snakeLength = 3;
 var food;
-var cursors;
 var score = 0;
 var scoreText;
 var dir = "RIGHT";
-var nextDir = "RIGHT"; 
+var nextDir = "RIGHT";
 var playArea = { x: 0, y: 0, width: 600, height: 400 };
 
-function preload() {}
-
 function create() {
+    // หัวงู
     let head = this.add.rectangle(300, 200, 10, 10, 0x00ff00);
     snakeBody.push(head);
 
+    // สร้างอาหาร
     spawnFood(this);
-    cursors = this.input.keyboard.createCursorKeys();
 
+    // คะแนน
     scoreText = this.add.text(10, 10, "คะแนน: 0", { fontSize: '20px', fill: '#fff' });
 
-    // เคลื่อนงูทุก 200ms
+    // คีย์บอร์ด
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // ให้ moveSnake ทำงานทุก 200ms
     this.time.addEvent({
         delay: 200,
         loop: true,
@@ -63,7 +65,7 @@ function moveSnake(scene) {
         spawnFood(scene);
         snakeLength++;
 
-        // ลดขอบสนาม (ถ้ายังไม่เล็กเกินไป)
+        // ลดขนาดสนาม (ถ้ายังไม่เล็กเกินไป)
         if (playArea.width > 200 && playArea.height > 200) {
             playArea.x += 5;
             playArea.y += 5;
@@ -99,7 +101,7 @@ function spawnFood(scene) {
     var x = Phaser.Math.Between(playArea.x / 10, (playArea.x + playArea.width) / 10 - 1) * 10;
     var y = Phaser.Math.Between(playArea.y / 10, (playArea.y + playArea.height) / 10 - 1) * 10;
     food = scene.add.rectangle(x, y, 10, 10, 0xff0000);
-    // ❌ ไม่มี physics แล้ว อาหารจะไม่วิ่งมั่ว
+    // ❌ ไม่มี physics → อาหารจะหยุดนิ่ง
 }
 
 function restart(scene) {
