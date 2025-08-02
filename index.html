@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>เกมงู + Leaderboard Firebase (มือถือ)</title>
+<title>เกมงู + Leaderboard Firebase</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -28,14 +28,13 @@
   }
   button.control-btn {
     margin: 5px;
-    width: 60px;
-    height: 60px;
-    font-size: 26px;
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
     border-radius: 50%;
     border: none;
     background-color: #555;
     color: white;
-    user-select: none;
   }
   button.control-btn:active {
     background-color: #999;
@@ -64,7 +63,7 @@
 </head>
 <body>
 
-<h1>🐍 เกมงู + Leaderboard Firebase (มือถือ)</h1>
+<h1>🐍 เกมงู + Leaderboard Firebase</h1>
 
 <div id="loginScreen">
   <p>กรุณาใส่ชื่อของคุณก่อนเริ่มเกม:</p>
@@ -73,7 +72,7 @@
   <button id="startBtn">เริ่มเกม</button>
 </div>
 
-<canvas id="gameCanvas" width="360" height="240" style="display:none;"></canvas>
+<canvas id="gameCanvas" width="600" height="400" style="display:none;"></canvas>
 
 <div id="controlPanel">
   <div>
@@ -111,30 +110,40 @@
   const db = getDatabase(app);
 
   async function saveScore(playerName, score) {
-    const scoreRef = ref(db, 'scores/' + playerName);
-    const snapshot = await get(scoreRef);
-    if (!snapshot.exists() || score > snapshot.val()) {
-      await set(scoreRef, score);
-      alert(`บันทึกคะแนนใหม่: ${score} สำหรับผู้เล่น ${playerName}`);
+    try {
+      const scoreRef = ref(db, 'scores/' + playerName);
+      const snapshot = await get(scoreRef);
+      if (!snapshot.exists() || score > snapshot.val()) {
+        await set(scoreRef, score);
+        alert(`เก็บข้อมูลคะแนนเรียบร้อย! คะแนน: ${score} สำหรับผู้เล่น ${playerName}`);
+      }
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดตอนบันทึกคะแนน:", error);
     }
   }
 
   async function loadLeaderboard() {
-    const scoresRef = ref(db, 'scores');
-    const topScoresQuery = query(scoresRef, orderByValue(), limitToLast(10));
-    const snapshot = await get(topScoresQuery);
-    const scores = [];
-    snapshot.forEach(child => {
-      scores.push({ name: child.key, score: child.val() });
-    });
-    scores.reverse();
-    return scores;
+    try {
+      const scoresRef = ref(db, 'scores');
+      const topScoresQuery = query(scoresRef, orderByValue(), limitToLast(10));
+      const snapshot = await get(topScoresQuery);
+      if (!snapshot.exists()) return [];
+
+      const scores = [];
+      snapshot.forEach(child => {
+        scores.push({ name: child.key, score: child.val() });
+      });
+      scores.reverse();
+      return scores;
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดตอนโหลดลีดเดอร์บอร์ด:", error);
+      return [];
+    }
   }
 
-  // ให้เรียก loadLeaderboard() จาก console ได้เลย
-  window.loadLeaderboard = loadLeaderboard;
+  const box = 10;
+  const foodSize = box * 1.5;
 
-  let box = 10;
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -148,8 +157,8 @@
 
   function spawnFood() {
     food = {
-      x: Math.floor(Math.random() * (canvas.width/box)) * box,
-      y: Math.floor(Math.random() * (canvas.height/box)) * box
+      x: Math.floor(Math.random() * (canvas.width / box)) * box,
+      y: Math.floor(Math.random() * (canvas.height / box)) * box
     };
   }
 
@@ -165,7 +174,7 @@
     }
 
     ctx.fillStyle = '#FFFF00';
-    ctx.fillRect(food.x, food.y, box, box);
+    ctx.fillRect(food.x, food.y, foodSize, foodSize);
 
     ctx.fillStyle = '#fff';
     ctx.font = '16px Arial';
@@ -235,7 +244,7 @@
 
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 8 * box});
+      snake.push({x: i * box, y: 10 * box});
     }
     direction = 'RIGHT';
     score = 0;
@@ -249,7 +258,7 @@
     clearInterval(gameInterval);
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 8 * box});
+      snake.push({x: i * box, y: 10 * box});
     }
     direction = 'RIGHT';
     score = 0;
