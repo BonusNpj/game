@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>เกมงู + Leaderboard Firebase</title>
+<title>เกมงู + Leaderboard Firebase (มือถือ)</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -28,13 +28,14 @@
   }
   button.control-btn {
     margin: 5px;
-    width: 70px;
-    height: 70px;
-    font-size: 28px;
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
     border-radius: 50%;
     border: none;
     background-color: #555;
     color: white;
+    user-select: none;
   }
   button.control-btn:active {
     background-color: #999;
@@ -63,7 +64,7 @@
 </head>
 <body>
 
-<h1>🐍 เกมงู + Leaderboard Firebase</h1>
+<h1>🐍 เกมงู + Leaderboard Firebase (มือถือ)</h1>
 
 <div id="loginScreen">
   <p>กรุณาใส่ชื่อของคุณก่อนเริ่มเกม:</p>
@@ -72,7 +73,7 @@
   <button id="startBtn">เริ่มเกม</button>
 </div>
 
-<canvas id="gameCanvas" width="600" height="400" style="display:none;"></canvas>
+<canvas id="gameCanvas" width="360" height="240" style="display:none;"></canvas>
 
 <div id="controlPanel">
   <div>
@@ -130,7 +131,10 @@
     return scores;
   }
 
-  let box = 15;
+  // ให้เรียก loadLeaderboard() จาก console ได้เลย
+  window.loadLeaderboard = loadLeaderboard;
+
+  let box = 10;
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
@@ -164,8 +168,8 @@
     ctx.fillRect(food.x, food.y, box, box);
 
     ctx.fillStyle = '#fff';
-    ctx.font = '20px Arial';
-    ctx.fillText('คะแนน: ' + score, 10, 30);
+    ctx.font = '16px Arial';
+    ctx.fillText('คะแนน: ' + score, 10, 20);
   }
 
   function collision(newHead, array) {
@@ -231,7 +235,7 @@
 
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 10 * box});
+      snake.push({x: i * box, y: 8 * box});
     }
     direction = 'RIGHT';
     score = 0;
@@ -245,7 +249,7 @@
     clearInterval(gameInterval);
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 10 * box});
+      snake.push({x: i * box, y: 8 * box});
     }
     direction = 'RIGHT';
     score = 0;
