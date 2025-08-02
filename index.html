@@ -28,9 +28,9 @@
   }
   button.control-btn {
     margin: 5px;
-    width: 70px;
-    height: 70px;
-    font-size: 28px;
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
     border-radius: 50%;
     border: none;
     background-color: #555;
@@ -72,7 +72,7 @@
   <button id="startBtn">เริ่มเกม</button>
 </div>
 
-<canvas id="gameCanvas" width="600" height="400" style="display:none;"></canvas>
+<canvas id="gameCanvas" width="400" height="300" style="display:none;"></canvas>
 
 <div id="controlPanel">
   <div>
@@ -107,7 +107,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  const db = getDatabase(app, "https://game-7af18-default-rtdb.asia-southeast1.firebasedatabase.app");
 
   async function saveScore(playerName, score) {
     try {
@@ -141,14 +141,14 @@
     }
   }
 
-  const box = 10;
+  const box = 15; 
   const foodSize = box * 1.5;
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
 
   let snake = [];
-  const initialLength = 5;
+  const initialLength = 4;
   let direction = 'RIGHT';
   let food = {};
   let score = 0;
@@ -244,7 +244,7 @@
 
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 10 * box});
+      snake.push({x: i * box, y: 8 * box});
     }
     direction = 'RIGHT';
     score = 0;
@@ -258,7 +258,7 @@
     clearInterval(gameInterval);
     snake = [];
     for(let i=initialLength - 1; i>=0; i--) {
-      snake.push({x: i * box, y: 10 * box});
+      snake.push({x: i * box, y: 8 * box});
     }
     direction = 'RIGHT';
     score = 0;
