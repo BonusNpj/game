@@ -8,9 +8,25 @@
   <style>
     body { margin: 0; background: #222; text-align: center; }
     canvas { margin-top: 20px; }
+    #controls button {
+      font-size: 30px; margin: 5px; padding: 15px;
+      border-radius: 10px; border: none; background: #555; color: white;
+    }
   </style>
 </head>
 <body>
   <h1 style="color:white">🐍 Snake by Bonus</h1>
+
+  <!-- ปุ่มควบคุมมือถือ -->
+  <div id="controls" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);">
+    <div>
+      <button onclick="dir='UP'">⬆️</button>
+    </div>
+    <div>
+      <button onclick="dir='LEFT'">⬅️</button>
+      <button onclick="dir='DOWN'">⬇️</button>
+      <button onclick="dir='RIGHT'">➡️</button>
+    </div>
+  </div>
 </body>
 </html>
