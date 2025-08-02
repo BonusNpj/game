@@ -3,7 +3,7 @@ var config = {
     width: 600,
     height: 400,
     backgroundColor: '#2d2d2d',
-    scene: { preload: preload, create: create, update: update }
+    scene: { preload: preload, create: create }
 };
 
 var game = new Phaser.Game(config);
@@ -14,8 +14,8 @@ var cursors;
 var score = 0;
 var scoreText;
 var dir = "RIGHT";
-var nextDir = "RIGHT"; // ทิศที่ผู้เล่นกดล่าสุด
-var playArea = { x: 0, y: 0, width: 600, height: 400 }; // ขอบสนาม
+var nextDir = "RIGHT"; 
+var playArea = { x: 0, y: 0, width: 600, height: 400 };
 
 function preload() {}
 
@@ -28,24 +28,23 @@ function create() {
 
     scoreText = this.add.text(10, 10, "คะแนน: 0", { fontSize: '20px', fill: '#fff' });
 
-    // ใช้ timer กำหนดความเร็ว
+    // เคลื่อนงูทุก 200ms
     this.time.addEvent({
-        delay: 150,
+        delay: 200,
         loop: true,
         callback: () => moveSnake(this)
     });
 }
 
-function update() {
-    // กดจากคีย์บอร์ด
+function moveSnake(scene) {
+    // ควบคุมจากคีย์บอร์ด
     if (cursors.left.isDown && dir !== "RIGHT") nextDir = "LEFT";
     else if (cursors.right.isDown && dir !== "LEFT") nextDir = "RIGHT";
     else if (cursors.up.isDown && dir !== "DOWN") nextDir = "UP";
     else if (cursors.down.isDown && dir !== "UP") nextDir = "DOWN";
-}
 
-function moveSnake(scene) {
-    dir = nextDir; 
+    dir = nextDir;
+
     var head = snakeBody[0];
     var newHead = scene.add.rectangle(head.x, head.y, 10, 10, 0x00ff00);
 
@@ -64,7 +63,7 @@ function moveSnake(scene) {
         spawnFood(scene);
         snakeLength++;
 
-        // ลดขนาดสนาม (ไม่ให้เล็กเกินไป)
+        // ลดขอบสนาม (ถ้ายังไม่เล็กเกินไป)
         if (playArea.width > 200 && playArea.height > 200) {
             playArea.x += 5;
             playArea.y += 5;
@@ -100,6 +99,7 @@ function spawnFood(scene) {
     var x = Phaser.Math.Between(playArea.x / 10, (playArea.x + playArea.width) / 10 - 1) * 10;
     var y = Phaser.Math.Between(playArea.y / 10, (playArea.y + playArea.height) / 10 - 1) * 10;
     food = scene.add.rectangle(x, y, 10, 10, 0xff0000);
+    // ❌ ไม่มี physics แล้ว อาหารจะไม่วิ่งมั่ว
 }
 
 function restart(scene) {
